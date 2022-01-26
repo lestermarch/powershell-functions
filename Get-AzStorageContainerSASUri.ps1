@@ -5,6 +5,9 @@ Function Get-AzStorageContainerSASUri {
         [String]$TenantId,
 
         [Parameter(Mandatory=$true)]
+        [String]$SubscriptionId,
+
+        [Parameter(Mandatory=$true)]
         [String]$ResourceGroupName,
 
         [Parameter(Mandatory=$true)]
@@ -22,6 +25,7 @@ Function Get-AzStorageContainerSASUri {
 
     # Connect as Service Principal
     Connect-AzAccount -TenantId $TenantId -Credential $Credential -ServicePrincipal -WarningAction 'SilentlyContinue' | Out-Null
+    Select-AzSubscription -SubscriptionId $SubscriptionId | Out-Null
 
     # Load the Storage Account context
     $StorageAccountKey = (Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -AccountName $StorageAccountName)[0].Value
@@ -30,12 +34,12 @@ Function Get-AzStorageContainerSASUri {
     # Generate a full URI to the container with SAS token
     $SasParam = @{
         Context    = $StorageContext
-        Name 	     = $ContainerName
+        Name 	   = $ContainerName
         ExpiryTime = (Get-Date).AddMinutes($TokenDurationMinutes)
         Permission = 'rw'
         FullUri    = $true
     }
     
-    $Uri = New-AzStorageContainerSASToken @SasParam
-    Return $Uri
+    $DestinationUri = New-AzStorageContainerSASToken @SasParam
+    Return $DestinationUri
 }
